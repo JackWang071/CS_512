@@ -25,61 +25,79 @@ def GetDataFromDataFile():
 
 def MakeMatrix(OriginalMatrix, ColA, ColB, ColC):
     NewMatrix = InitMatrix(10,3)
-    # for loop fills in the elements of NewMatrix with the designated columns from OriginalMatrix
-    for col in range(0,2):
-        index = ColA
-        if (index > ColB):
-            index = ColB
-        if (index > ColC):
-            index = ColB
-        for row in range (len(OriginalMatrix)):
-            NewMatrix[row][col] = OriginalMatrix[row][index]
+    columns = [ColA, ColB, ColC]
+    # first for loop sorts the elements in columns
+    for i in range(len(columns)):
+        for j in range(i, len(columns)):
+            if columns[i] > columns[j]:
+                temp = columns[i]
+                columns[i] = columns[j]
+                columns[j] = temp
+    for col in range(len(columns)):
+        for row in range(len(OriginalMatrix)):
+            NewMatrix[row][col] = OriginalMatrix[row][columns[col]]
     return NewMatrix
 
 def GetThreeRandomNumbers(OriginalMatrix, Num1, Num2, Num3):
     ColA = Num1; ColB = Num2; ColC = Num3
-    while(ColA != Num1) & (ColA != Num2) & (ColA != Num3):
+    while(ColA == Num1) | (ColA == Num2) | (ColA == Num3):
         ColA = random.randrange(0,len(OriginalMatrix[0]),1)
-    while(ColB != ColA) & (ColB != Num1) & (ColB != Num2) & (ColB != Num3):
+    while(ColB == ColA) | (ColB == Num1) | (ColB == Num2) | (ColB == Num3):
         ColB = random.randrange(0,len(OriginalMatrix[0]),1)
-    while(ColC != ColB) & (ColC != ColA) & (ColC != Num1) & (ColC != Num2) & (ColC != Num3):
+    while(ColC == ColB) | (ColC == ColA) | (ColC == Num1) | (ColC == Num2) | (ColC == Num3):
         ColC = random.randrange(0,len(OriginalMatrix[0]),1)
     return ColA, ColB, ColC
 
 def AddingMatrices(Matrix1, Matrix2):
+    Matrix3 = InitMatrix(len(Matrix1), len(Matrix1[0]))
     for row in range(len(Matrix1)):
         for col in range (len(Matrix1[row])):
-            Matrix1[row][col] += Matrix2[row][col]
-    return Matrix1
+            Matrix3[row][col] = Matrix1[row][col] + Matrix2[row][col]
+    return Matrix3
 
 def AddingContentOfEachRow(Matrix):
     NewMatrix = InitMatrix(10,1)
-    ColTotal = 0
     for row in range (len(Matrix)):
+        ColTotal = 0
         for col in range (len(Matrix[row])):
             ColTotal += Matrix[row][col]
         NewMatrix[row] = ColTotal
     return NewMatrix
 
 # try implementing quicksort
-def SortElements(Vector):
-    if len(Vector[0]) == 1:
-        NewMatrix = InitMatrix(10,1)
-        for row in range(len(Vector)):
-            NewMatrix[row][0] = Vector[row][0]
-            for row2 in range (row, len(Vector)-1):
-                if (NewMatrix[row][0] > Vector[row2][0]):
-                    NewMatrix[row][0] = Vector[row2][0]
-        return NewMatrix
-    else:
+def SortElements(Matrix):
+    if isinstance(Matrix[0], int):
+        Vector = InitMatrix(len(Matrix), 1)
+        for r in range(len(Matrix)):
+            Vector[r] = Matrix[r]
+        for i in range(len(Vector)):
+            for j in range(i, len(Vector)):
+                if Vector[i] > Vector[j]:
+                    temp = Vector[i]
+                    Vector[i] = Vector[j]
+                    Vector[j] = temp
         return Vector
 
 def PrintMatrix(Matrix):
-    for row in range(len(Matrix)):
-        line = ""
-        for col in range(len(Matrix[0])):
-            line = line + str(Matrix[row][col]) + "\t"
-        print(line)
+    if isinstance(Matrix[0], int):
+        for row in range(len(Matrix)):
+            print(Matrix[row])
+    else:
+        for row in range(len(Matrix)):
+            line = ""
+            for col in range(len(Matrix[0])):
+                line = line + str(Matrix[row][col]) + "\t"
+            print(line)
 
 def PrintOutput(OriginalMatrix, Matrix1, Matrix2, Matrix3, Matrix4, Matrix5):
-    print("")
+    PrintMatrix(OriginalMatrix)
+    print("\nMatrix 1:")
+    PrintMatrix(Matrix1)
+    print("\nMatrix 2:")
+    PrintMatrix(Matrix2)
+    print("\nMatrix 3:")
+    PrintMatrix(Matrix3)
+    print("\nMatrix 4:")
+    PrintMatrix(Matrix4)
+    print("\nMatrix 5:")
+    PrintMatrix(Matrix5)
