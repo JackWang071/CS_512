@@ -4,6 +4,7 @@ import os
 def InitMatrix(rows, cols):
     return [[0 for c in range(cols)] for r in range(rows)]
 
+#Getting Data From the Matrix
 def GetDataFromDataFile():
     Matrix = InitMatrix(10, 10)
     row = 0; col = 0
@@ -22,7 +23,7 @@ def GetDataFromDataFile():
                     token = token + line[c]
             row += 1
     return Matrix
-
+#This makes a 10 by 3 matrix by selecting a random of 3 matrixs.
 def MakeMatrix(OriginalMatrix, ColA, ColB, ColC):
     NewMatrix = InitMatrix(10,3)
     columns = [ColA, ColB, ColC]
