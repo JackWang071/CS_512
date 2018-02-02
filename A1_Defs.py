@@ -39,6 +39,7 @@ def MakeMatrix(OriginalMatrix, ColA, ColB, ColC):
             NewMatrix[row][col] = OriginalMatrix[row][columns[col]]
     return NewMatrix
 
+#Selects three numbers which are all columns.
 def GetThreeRandomNumbers(OriginalMatrix, Num1, Num2, Num3):
     ColA = Num1; ColB = Num2; ColC = Num3
     while(ColA == Num1) | (ColA == Num2) | (ColA == Num3):
