@@ -10,7 +10,7 @@ def GetDataFromDataFile():
     Matrix = InitMatrix(10, 10)
     row = 0; col = 0
     # Opens the correct path to Data.txt
-    with open(os.path.join(os.path.dirname(__file__), "Data.txt")) as fin:
+    with open(os.path.join(os.path.dirname(__file__), "Data.txt"), 'r') as fin:
         # First for loop reads in each line from fin
         for line in fin:
             col = 0
@@ -100,31 +100,39 @@ def SortElements(Matrix, order):
                     Vector[j] = temp
         return Vector
 
-# Prints each element of the parameter Matrix
-def PrintMatrix(Matrix):
+# Returns entire Matrix as a string
+def MatrixToString(Matrix):
+    PrintedMatrix = ""
     # Matrix is a vector, then run a for loop that iterates down each element
     if isinstance(Matrix[0], int):
         for row in range(len(Matrix)):
-            print(Matrix[row])
+            PrintedMatrix = PrintedMatrix + str(Matrix[row]) + "\n"
     # Otherwise run nested for loops that concatenate each row's elements into one string and print that string
     else:
         for row in range(len(Matrix)):
             line = ""
             for col in range(len(Matrix[0])):
                 line = line + str(Matrix[row][col]) + "\t"
-            print(line)
+            PrintedMatrix = PrintedMatrix + line + "\n"
+    return PrintedMatrix
 
-# Calls PrintMatrix() for each Matrix in the parameters.
+# Writes each parameter Matrix to an output file.
 def PrintOutput(OriginalMatrix, Matrix1, Matrix2, Matrix3, Matrix4, Matrix5):
-    print("Original Matrix:")
-    PrintMatrix(OriginalMatrix)
-    print("\nMatrix 1:")
-    PrintMatrix(Matrix1)
-    print("\nMatrix 2:")
-    PrintMatrix(Matrix2)
-    print("\nMatrix 3:")
-    PrintMatrix(Matrix3)
-    print("\nMatrix 4:")
-    PrintMatrix(Matrix4)
-    print("\nMatrix 5:")
-    PrintMatrix(Matrix5)
+    with open(os.path.join(os.path.dirname(__file__), "Output.txt"), 'w') as fout:
+        fout.write("Original Matrix:\n")
+        fout.write(MatrixToString(OriginalMatrix))
+
+        fout.write("\nMatrix 1: Three random columns from Original, column elements sorted\n")
+        fout.write(MatrixToString(Matrix1))
+
+        fout.write("\nMatrix 2: Three random columns from Original (not repeated from Matrix 1), column elements sorted\n")
+        fout.write(MatrixToString(Matrix2))
+
+        fout.write("\nMatrix 3: Matrix 1 and Matrix 2 elements added together\n")
+        fout.write(MatrixToString(Matrix3))
+
+        fout.write("\nMatrix 4: Matrix 3's row elements added together\n")
+        fout.write(MatrixToString(Matrix4))
+
+        fout.write("\nMatrix 5: Matrix 4 elements sorted\n")
+        fout.write(MatrixToString(Matrix5))
