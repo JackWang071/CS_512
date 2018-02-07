@@ -8,7 +8,7 @@ def InitMatrix(rows, cols):
 # Copies data from an outside file into a Matrix
 def GetDataFromDataFile():
     Matrix = InitMatrix(10, 10)
-    row = 0; col = 0
+    row = 0;
     # Opens the correct path to Data.txt
     with open(os.path.join(os.path.dirname(__file__), "Data.txt"), 'r') as fin:
         # First for loop reads in each line from fin
@@ -70,7 +70,7 @@ def AddingMatrices(Matrix1, Matrix2):
 
 # Adds together all the elements in each of this Matrix's rows and returns the result as a new matrix
 def AddingContentOfEachRow(Matrix):
-    NewMatrix = InitMatrix(10,1)
+    NewMatrix = InitMatrix(len(Matrix),1)
     for row in range (len(Matrix)):
         ColTotal = 0
         for col in range (len(Matrix[row])):
