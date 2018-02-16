@@ -12,11 +12,11 @@ def GetDataFromFile(filename, n):
         return np.reshape(Matrix, (n,n))
 
 def MatrixProd(Matrix1, Matrix2):
-    if Matrix1.shape[0] == Matrix2.shape[0] & Matrix1.shape[1] == Matrix2.shape[1]:
+    if Matrix1.shape[1] == Matrix2.shape[0]:
         return np.matmul(Matrix1, Matrix2)
 
 def MatrixDotProd(Matrix1, Matrix2):
-    if Matrix1.shape[0] == Matrix2.shape[0] & Matrix1.shape[1] == Matrix2.shape[1]:
+    if Matrix1.shape[1] == Matrix2.shape[0]:
         return np.dot(Matrix1, Matrix2)
 
 def Transpose(OrigMatrix):
