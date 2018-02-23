@@ -2,50 +2,51 @@ import numpy as np
 import sys
 import os
 
-# Reads in an input file and returns an n*n matrix composed of elements from that input file.
-def GetDataFromFile(filename, n):
-    # File contents are first copied to an array to enable simpler counting and manipulation.
-    Array = np.fromfile(filename, dtype=int, sep="\t")
-    # Returns an error message if the file did not contain enough elements to build an n*n matrix.
-    if n*n > Array.size:
-        print("Not enough elements in " + filename + ".txt.")
-        sys.exit()
-    else:
-        Matrix = Array[:(n*n)]
-        return np.reshape(Matrix, (n,n))
+class SquareMatrix:
 
-# Finds the product of two matrices.
-def MatrixProd(Matrix1, Matrix2):
-    # Checks that Matrix1 has as many columns as Matrix2 has rows
-    if Matrix1.shape[1] == Matrix2.shape[0]:
-        return np.matmul(Matrix1, Matrix2)
+    # Reads in an input file and returns an n*n matrix composed of elements from that input file.
+    def GetDataFromFile(self, filename, n):
+        n = int(n)
+        # If n is less than 3, return an error message.
+        if n <= 3:
+            print("Error: Input out of bounds.")
+            sys.exit()
+        # File contents are first copied to a Matrix.
+        Matrix = np.loadtxt(filename, dtype=int)
+        # Returns an error message if the Matrix's dimensions are less than n*n.
+        if n*n > np.prod(Matrix.shape):
+            print("Not enough elements in " + filename + ".txt.")
+            sys.exit()
+        else:
+            return Matrix[:n, :n]
 
-# Finds the dot product of two matrices
-def MatrixDotProd(Matrix1, Matrix2):
-    # Checks that Matrix1 has as many columns as Matrix2 has rows
-    if Matrix1.shape[1] == Matrix2.shape[0]:
-        return np.dot(Matrix1, Matrix2)
+    # Finds the product of two matrices.
+    def MatrixProd(self, Matrix1, Matrix2):
+        # Checks that Matrix1 has as many columns as Matrix2 has rows
+        if Matrix1.shape[1] == Matrix2.shape[0]:
+            return np.matmul(Matrix1, Matrix2)
 
-# Returns the transposed form of the original matrix.
-def Transpose(OrigMatrix):
-    return np.transpose(OrigMatrix)
+    # Finds the dot product of two matrices
+    def MatrixDotProd(self, Matrix1, Matrix2):
+        # Checks that Matrix1 has as many columns as Matrix2 has rows
+        if Matrix1.shape[1] == Matrix2.shape[0]:
+            return np.dot(Matrix1, Matrix2)
 
-# Writes all parameter Matrices to an output file.
-def OutputFile(M1, M2, M3, M4, M5, M6, M7, M8):
-    with open(os.path.join(os.path.dirname(__file__), "Output.txt"), 'w') as fout:
-        fout.write("Matrix from file1.txt:" + "\n")
-        fout.write(str(M1))
-        fout.write("\n" + "Matrix from file2.txt:" + "\n")
-        fout.write(str(M2))
-        fout.write("\n" + "Product of M1 and M2:" + "\n")
-        fout.write(str(M3))
-        fout.write("\n" + "Dot Product of M1 and M2:" + "\n")
-        fout.write(str(M4))
-        fout.write("\n" + "Transposed M1:" + "\n")
-        fout.write(str(M5))
-        fout.write("\n" + "Transposed M2:" + "\n")
-        fout.write(str(M6))
-        fout.write("\n" + "Product of Transposed M1 and Transposed M2:" + "\n")
-        fout.write(str(M7))
-        fout.write("\n" + "Dot Product of Transposed M1 and Transposed M2:" + "\n")
-        fout.write(str(M8))
+    # Returns the transposed form of the original matrix.
+    def Transpose(self, OrigMatrix):
+        return np.transpose(OrigMatrix)
+
+    def DivideMatrix(self, Matrix1, Matrix2):
+        if Matrix2.shape[0] == Matrix2.shape[1]:
+            InverseMat2 = np.linalg.inv(Matrix2)
+
+            print(Matrix1)
+            print(InverseMat2)
+
+            return np.matmul(Matrix1, InverseMat2)
+
+    # Writes the parameter matrix to the output file.
+    def OutputFile(self, Matrix = "No matrix", message = "No message"):
+        with open(os.path.join(os.path.dirname(__file__), "Output.txt"), 'a') as fout:
+            # print(str(message) + "\n" + str(Matrix) + "\n")
+            fout.write(str(message) + "\n" + str(Matrix) + "\n")
