@@ -3,7 +3,6 @@ import sys
 import os
 
 class SquareMatrix:
-
     # Reads in an input file and returns an n*n matrix composed of elements from that input file.
     def GetDataFromFile(self, filename, n):
         n = int(n)
@@ -15,7 +14,7 @@ class SquareMatrix:
         Matrix = np.loadtxt(filename, dtype=int)
         # Returns an error message if the Matrix's dimensions are less than n*n.
         if n*n > np.prod(Matrix.shape):
-            print("Not enough elements in " + filename + ".txt.")
+            print("Not enough elements in " + filename + ".")
             sys.exit()
         else:
             return Matrix[:n, :n]
@@ -36,14 +35,24 @@ class SquareMatrix:
     def Transpose(self, OrigMatrix):
         return np.transpose(OrigMatrix)
 
+    # Divides one matrix by another.
     def DivideMatrix(self, Matrix1, Matrix2):
-        if Matrix2.shape[0] == Matrix2.shape[1]:
-            InverseMat2 = np.linalg.inv(Matrix2)
+        # Ensuring that Matrix1 and Matrix2 are both square.
+        if (Matrix1.shape[0] == Matrix1.shape[1]) & (Matrix2.shape[0] == Matrix2.shape[1]):
+            # Ensuring that Matrix1 and Matrix2 are the same dimensions
+            if Matrix1.shape == Matrix2.shape:
 
-            print(Matrix1)
-            print(InverseMat2)
+                det = np.linalg.det(Matrix2)
+                print(det)
 
-            return np.matmul(Matrix1, InverseMat2)
+                # Attempting to invert Matrix2 to multiply it with Matrix1.
+                if np.linalg.det(Matrix2) != 0:
+                    # InverseMat2 = np.linalg.inv(Matrix2)
+                    # return np.matmul(Matrix1, InverseMat2)
+                    np.seterr(divide = 'print')
+                    return np.divide(Matrix1, Matrix2)
+
+        return "\tUndefined"
 
     # Writes the parameter matrix to the output file.
     def OutputFile(self, Matrix = "No matrix", message = "No message"):
