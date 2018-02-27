@@ -3,6 +3,11 @@ import sys
 import os
 
 class SquareMatrix:
+
+    def RequestDim(self):
+        n = input("Please enter a positive number: ")
+        return int(n)
+
     # Reads in an input file and returns an n*n matrix composed of elements from that input file.
     def GetDataFromFile(self, filename, n):
         n = int(n)
@@ -37,22 +42,14 @@ class SquareMatrix:
 
     # Divides one matrix by another.
     def DivideMatrix(self, Matrix1, Matrix2):
-        # Ensuring that Matrix1 and Matrix2 are both square.
-        if (Matrix1.shape[0] == Matrix1.shape[1]) & (Matrix2.shape[0] == Matrix2.shape[1]):
-            # Ensuring that Matrix1 and Matrix2 are the same dimensions
-            if Matrix1.shape == Matrix2.shape:
-
-                det = np.linalg.det(Matrix2)
-                print(det)
-
-                # Attempting to invert Matrix2 to multiply it with Matrix1.
-                if np.linalg.det(Matrix2) != 0:
-                    # InverseMat2 = np.linalg.inv(Matrix2)
-                    # return np.matmul(Matrix1, InverseMat2)
-                    np.seterr(divide = 'print')
-                    return np.divide(Matrix1, Matrix2)
-
-        return "\tUndefined"
+        # Attempts to divide Matrix1 by Matrix2, returning 'Undefined' if zero-division error encountered
+        try:
+            np.seterr(divide = 'raise', invalid = 'raise')  # divide-by-zero error raises a FloatingPointError
+            Matrix3 = np.divide(Matrix1, Matrix2)
+        except FloatingPointError:
+            return "\tUndefined"
+        else:
+            return Matrix3
 
     # Writes the parameter matrix to the output file.
     def OutputFile(self, Matrix = "No matrix", message = "No message"):
