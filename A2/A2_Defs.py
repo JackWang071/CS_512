@@ -3,26 +3,28 @@ import sys
 import os
 
 class SquareMatrix:
+    # Init requests that the user enter the dimension for a matrix
+    def __init__(self):
+        self.n = 0
 
     def RequestDim(self):
-        n = input("Please enter a positive number: ")
-        return int(n)
+        self.n = input("Please enter a positive number: ")
 
     # Reads in an input file and returns an n*n matrix composed of elements from that input file.
-    def GetDataFromFile(self, filename, n):
-        n = int(n)
+    def GetDataFromFile(self, filename):
+        self.n = int(self.n)
         # If n is less than 3, return an error message.
-        if n <= 3:
+        if self.n <= 3:
             print("Error: Input out of bounds.")
             sys.exit()
         # File contents are first copied to a Matrix.
         Matrix = np.loadtxt(filename, dtype=int)
         # Returns an error message if the Matrix's dimensions are less than n*n.
-        if n*n > np.prod(Matrix.shape):
+        if self.n*self.n > np.prod(Matrix.shape):
             print("Not enough elements in " + filename + ".")
             sys.exit()
         else:
-            return Matrix[:n, :n]
+            return Matrix[:self.n, :self.n]
 
     # Finds the product of two matrices.
     def MatrixProd(self, Matrix1, Matrix2):

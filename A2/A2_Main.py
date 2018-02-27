@@ -1,10 +1,10 @@
 import A2_Defs
 
 MyMat = A2_Defs.SquareMatrix()
-n = MyMat.RequestDim()
+MyMat.RequestDim()
 
-M1 = MyMat.GetDataFromFile("file1.txt", n)
-M2 = MyMat.GetDataFromFile("file2.txt", n)
+M1 = MyMat.GetDataFromFile("file1.txt")
+M2 = MyMat.GetDataFromFile("file2.txt")
 M1_prod_M2 = MyMat.MatrixProd(M1,M2)
 M1_dotprod_M2 = MyMat.MatrixDotProd(M1, M2)
 M1_trans = MyMat.Transpose(M1)
@@ -14,9 +14,9 @@ M1_trans_dotprod_M2_trans = MyMat.MatrixDotProd(M1_trans, M2_trans)
 M1_dividedby_M2 = MyMat.DivideMatrix(M1, M2)
 
 MyMat2 = A2_Defs.SquareMatrix()
-n = MyMat2.RequestDim()
-M1 = MyMat2.GetDataFromFile("file1.txt", n)
-M2 = MyMat2.GetDataFromFile("file3.txt", n)
+MyMat2.RequestDim()
+M1 = MyMat2.GetDataFromFile("file1.txt")
+M2 = MyMat2.GetDataFromFile("file3.txt")
 M1_dividedby_M2_2 = MyMat2.DivideMatrix(M1, M2)
 
 MyMat.OutputFile(M1, "Matrix from file1.txt:")
