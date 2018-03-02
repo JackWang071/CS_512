@@ -3,10 +3,10 @@ import sys
 import os
 
 class SquareMatrix:
-    # Init requests that the user enter the dimension for a matrix
     def __init__(self):
         self.n = 0
 
+	# Requests that the user enter a dimension for the SquareMatrix
     def RequestDim(self):
         self.n = input("Please enter a positive number: ")
 
@@ -44,14 +44,9 @@ class SquareMatrix:
 
     # Divides one matrix by another.
     def DivideMatrix(self, Matrix1, Matrix2):
-        # Attempts to divide Matrix1 by Matrix2, returning 'Undefined' if zero-division error encountered
-        try:
-            np.seterr(divide = 'raise', invalid = 'raise')  # divide-by-zero error raises a FloatingPointError
-            Matrix3 = np.divide(Matrix1, Matrix2)
-        except FloatingPointError:
-            return "\tUndefined"
-        else:
-            return Matrix3
+        Matrix3 = np.ndarray.astype(np.divide(Matrix1, Matrix2), dtype=object)
+        Matrix3[Matrix3 == float('Inf')] = str("Undef")
+        return Matrix3
 
     # Writes the parameter matrix to the output file.
     def OutputFile(self, Matrix = "No matrix", message = "No message"):
