@@ -53,11 +53,16 @@ def createAnOutputFile():
                         algorithm.model.__class__.__name__, algorithm.gen_max,timestamp)
     elif file_name==None:
         file_name = "{}.csv".format(timestamp)
-    fileOut = open(file_name, 'wb')
+    fileOut = open(file_name, 'w')
     fileW = csv.writer(fileOut)
 
-    fileW.writerow(['Descriptor ID', 'Fitness', 'Model','R2', 'Q2',
-            'R2Pred_Validation', 'R2Pred_Test'])
+    fileW.writerow(['Descriptor ID', 'Fitness', 'Model', 'R2', 'Q2', 'R2Pred_Validation', 'R2Pred_Test'])
+
+    #strform = "utf-8"
+
+    #fileW.writerow([bytes('Descriptor ID', strform), bytes('Fitness', strform), bytes('Model', strform),
+    #                bytes('R2', strform), bytes('Q2', strform), bytes('R2Pred_Validation', strform),
+    #                bytes('R2Pred_Test', strform)])
 
     return fileW
 
@@ -78,39 +83,73 @@ def createANewPopulation(numOfPop, numOfFea, OldPopulation, fitness):
 #   The rest of the rows should be filled randomly the same way you did when
 #   you created the initial population.
 
-    NewPopulation = np.ndarray((numOfPop, numOfFea))
+    NewPopulation = ndarray((numOfPop, numOfFea))
 
-    BestFitness = 0
+    BestFitnessIndex = 0
     f_index = 0
     fitness_range = numOfPop
 
-    for n in range(2):
+    # Moving the two OldPopulation rows with best fitness to the first and second rows of NewPopulation
+    for n in range(0,2):
         for f_index in range(fitness_range):
-            # If value of current BestFitness is greater than another fitness value, then that value is new BestFitness
-            if fitness[BestFitness] > fitness[f_index]:
-                BestFitness = f_index
-        np.delete(fitness, f_index)
-        NewPopulation[n] = OldPopulation[f_index]
+            # If fitness at this BestFitnessIndex > fitness at nth position, then nth position is new BestFitnessIndex
+            if fitness[BestFitnessIndex] > fitness[f_index]:
+                BestFitnessIndex = f_index
+        delete(fitness, f_index)
+        # Deep-copying all column elements in a best-fitting OldPopulation row to the current NewPopulation row
+        for ni in range(0, numOfFea):
+            NewPopulation[n][ni] = OldPopulation[BestFitnessIndex][ni]
         fitness_range -= 1
 
-    for i in range(1, numOfPop-1):
+    # Designating Dad and Mom rows
+    Dad = NewPopulation[0]
+    Mom = NewPopulation[1]
+
+    # Child at position 2
+    for d in range(0, int(numOfFea/2)):
+        NewPopulation[2][d] = Dad[d]
+    for m in range(int(numOfFea/2), numOfFea):
+        NewPopulation[2][m] = Mom[m]
+
+    # Child at position 3
+    for m in range(0, int(numOfFea/2)):
+        NewPopulation[3][m] = Mom[m]
+    for d in range(int(numOfFea/2), numOfFea):
+        NewPopulation[3][d] = Dad[d]
+
+    # Child at position 4
+    for i in range(0, numOfFea):
+        if i%2 == 0:
+            NewPopulation[4][i] = Mom[i]
+        else:
+            NewPopulation[4][i] = Dad[i]
+
+    # Child at position 5
+    for i in range(0, numOfFea):
+        if i%2 == 0:
+            NewPopulation[5][i] = Dad[i]
+        else:
+            NewPopulation[5][i] = Mom[i]
+
+    # All remaining rows
+    for p in range(6, numOfPop):
         V = getAValidrow(numOfFea)
-        for j in range(numOfFea):
-            NewPopulation[i][j] = V[j]
+        for f in range(0, numOfFea):
+            NewPopulation[p][f] = V[f]
 
     return NewPopulation
 
 #-------------------------------------------------------------------------------------------
-def PerformOneMillionIteration(numOdPop, numOfFea, population, fitness, model, fileW, \
+def PerformOneMillionIteration(numOdPop, numOfFea, population, fitness, model, fileW,
                                TrainX, TrainY, ValidateX, ValidateY, TestX, TestY):
-#   NumOfGenerations = 1
-#   OldPopulation = population
-#   while (NumOfGenerations < 1,000,000)
-#       population = createANewPopulation(numOdPop, numOfFea, OldPopulation, fitness)
-#       fittingStatus, fitness = FromFinessFileMLR.validate_model(model,fileW, population, \
-#                                TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
-#      NumOfGenerations = NumOfGenerations + 1
-     return
+    NumOfGenerations = 1
+    OldPopulation = population
+    while (NumOfGenerations < 1,000,000):
+        population = createANewPopulation(numOdPop, numOfFea, OldPopulation, fitness)
+        fittingStatus, fitness = FromFinessFileMLR.validate_model(model,fileW, population, TrainX, TrainY,
+                                                                  ValidateX, ValidateY, TestX, TestY)
+        NumOfGenerations = NumOfGenerations + 1
+    return
 #--------------------------------------------------------------------------------------------
 def main():
 

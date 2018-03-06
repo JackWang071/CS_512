@@ -12,7 +12,7 @@ def getTwoDecPoint(x):
 
 #------------------------------------------------------------------------------
 def placeDataIntoArray(fileName):
-    with open(fileName, mode='rbU') as csvfile:
+    with open(fileName, mode='r') as csvfile:
         datareader = csv.reader(csvfile, delimiter=',', quotechar=' ')
         dataArray = array([row for row in datareader], dtype=float64, order='C')
 
