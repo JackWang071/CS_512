@@ -58,12 +58,6 @@ def createAnOutputFile():
 
     fileW.writerow(['Descriptor ID', 'Fitness', 'Model', 'R2', 'Q2', 'R2Pred_Validation', 'R2Pred_Test'])
 
-    #strform = "utf-8"
-
-    #fileW.writerow([bytes('Descriptor ID', strform), bytes('Fitness', strform), bytes('Model', strform),
-    #                bytes('R2', strform), bytes('Q2', strform), bytes('R2Pred_Validation', strform),
-    #                bytes('R2Pred_Test', strform)])
-
     return fileW
 
 
@@ -149,6 +143,7 @@ def PerformOneMillionIteration(numOdPop, numOfFea, population, fitness, model, f
         fittingStatus, fitness = FromFinessFileMLR.validate_model(model,fileW, population, TrainX, TrainY,
                                                                   ValidateX, ValidateY, TestX, TestY)
         NumOfGenerations = NumOfGenerations + 1
+        print(NumOfGenerations)
     return
 #--------------------------------------------------------------------------------------------
 def main():
@@ -184,11 +179,10 @@ def main():
 
     fittingStatus = unfit
     population = Create_A_Population(numOfPop,numOfFea)
-    fittingStatus, fitness = FromFinessFileMLR.validate_model(model,fileW, population, \
-        TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
+    fittingStatus, fitness = FromFinessFileMLR.validate_model(model,fileW, population, TrainX, TrainY,
+                                                              ValidateX, ValidateY, TestX, TestY)
 
-    PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, fileW, \
-                               TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
+    PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, fileW, TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
 #main routine ends in here
 
 #------------------------------------------------------------------------------

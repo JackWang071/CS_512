@@ -8,11 +8,7 @@ import hashlib
 
 import FromDataFileMLR
 import mlr
-
-
 #------------------------------------------------------------------------------
-
-
 def r2(y, yHat):
     #Coefficient of determination
     numer = ((y - yHat)**2).sum()       # Residual Sum of Squares
@@ -20,13 +16,11 @@ def r2(y, yHat):
     r2 = 1 - numer/denom
     return r2
 #------------------------------------------------------------------------------
-
 def r2Pred(yTrain, yTest, yHatTest):
     numer = ((yHatTest - yTest)**2).sum()
     denom = ((yTest - yTrain.mean())**2).sum()
     r2Pred = 1 - numer/denom
     return r2Pred
-
 #------------------------------------------------------------------------------
 
 def cv_predict(model, set_x, set_y):
@@ -42,25 +36,31 @@ def cv_predict(model, set_x, set_y):
 #------------------------------------------------------------------------------
 #Ahmad Hadaegh: Modified  on: July 16, 2013
 
-def calc_fitness(xi, Y, Yhat, c=2):
+def calc_fitness(xi, Y_T, Y_V, Yhat, c=2):
     """
     Calculate fitness of a prediction.
     xi : array_like -- Mask of features to measure fitness of. Must be of dtype bool.
     c : float       -- Adjustment parameter.
     """
-    
-    p = sum(xi)   # Number of selected parameters
-    n = len(Y)    # Sample size
-    numer = ((Y - Yhat)**2).sum()/n   # Mean square error
-    pcn = p*(c/n)
-    if pcn >= 1:
-        return 1000
-    denom = (1 - pcn)**2
-    theFitness = numer/denom
+    #print("In calc_fitness routine, fitness = ")
+    gamma = 3.3   # penalty applied to # of descriptors
+    n = sum(xi)   # Number of selected parameters, previously p
+    #n = len(Y)
+    m_t = len(Y_T)    # Sample size for training set, previously n
+    m_v = len(Y_V)    # Sample size for validation set
+    Y = append(Y_T, Y_V)
+    mse = (((Y - Yhat)**2).sum()/n)**2   # Mean square error, previously numer
+    #pcn = p*(c/n)
+    #if pcn >= 1:
+    #    return 1000
+    numer = (m_t - n - 1)*mse + m_v*mse
+    denom = m_t - (gamma*n) + m_v
+    #denom = (1 - pcn)**2
+    theFitness = (numer/denom)**0.5
+    #print(theFitness)
     return theFitness
-
 #------------------------------------------------------------------------------
-#Ahmad Hadaegh: Modified  on: July 16, 2013
+# Ahmad Hadaegh: Modified  on: July 16, 2013
 def InitializeTracks():
     trackDesc = {}
     trackFitness = {}
@@ -93,9 +93,7 @@ def OnlySelectTheOnesColumns(popI):
     xi = xi.nonzero()[0]
     xi = xi.tolist()
     return xi
- 
 #------------------------------------------------------------------------------
-
 def validate_model(model, fileW, population, TrainX, TrainY, ValidateX, ValidateY, TestX, TestY):
     
     numOfPop = population.shape[0]
@@ -105,11 +103,9 @@ def validate_model(model, fileW, population, TrainX, TrainY, ValidateX, Validate
     true = 1
     predictive = false
     
-    trackDesc, trackFitness,trackModel,trackR2, trackQ2, \
-    trackR2PredValidation, trackR2PredTest  = InitializeTracks()
+    trackDesc, trackFitness,trackModel,trackR2, trackQ2, trackR2PredValidation, trackR2PredTest  = InitializeTracks()
 
-    yTrain, yHatTrain, yHatCV, yValidation, \
-    yHatValidation, yTest, yHatTest = initializeYDimension()
+    yTrain, yHatTrain, yHatCV, yValidation, yHatValidation, yTest, yHatTest = initializeYDimension()
 
     unfit = 1000
     itFits = 1
@@ -145,8 +141,9 @@ def validate_model(model, fileW, population, TrainX, TrainY, ValidateX, Validate
                       
         Y_fitness = append(TrainY, ValidateY)
         Yhat_fitness = append(Yhat_cv, Yhat_validation)
-            
-        fitness[i] = calc_fitness(xi, Y_fitness, Yhat_fitness, c)
+
+        #fitness[i] = calc_fitness(xi, Y_fitness Yhat_fitness, c)
+        fitness[i] = calc_fitness(xi, TrainY, ValidateY, Yhat_fitness, c)
 
         if predictive and ((q2_loo < 0.5) or (r2pred_validation < 0.5) or (r2pred_test < 0.5)):
             # if it's not worth recording, just return the fitness
@@ -193,21 +190,18 @@ def validate_model(model, fileW, population, TrainX, TrainY, ValidateX, Validate
         for i in range(len(yHatTest[idx])):
             yHatTest[idx][i] = FromDataFileMLR.getTwoDecPoint(yHatTest[idx][i])
 
-    write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
-                trackQ2,trackR2PredValidation, trackR2PredTest)
+    write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,
+          trackQ2,trackR2PredValidation, trackR2PredTest)
 
     return itFits, fitness
-#------------------------------------------------------------------------------  
-
-def write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
-                trackQ2,trackR2PredValidation, trackR2PredTest):
+#------------------------------------------------------------------------------
+def write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,
+          trackQ2,trackR2PredValidation, trackR2PredTest):
     
     for key in trackFitness.keys():
-        fileW.writerow([trackDesc[key], trackFitness[key], trackModel[key], \
-            trackR2[key], trackQ2[key], trackR2PredValidation[key], trackR2PredTest[key]])
-
+        fileW.writerow([trackDesc[key], trackFitness[key], trackModel[key], trackR2[key],
+                        trackQ2[key], trackR2PredValidation[key], trackR2PredTest[key]])
 
     #fileOut.close()
-
 #------------------------------------------------------------------------------
 

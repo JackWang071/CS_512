@@ -1,8 +1,5 @@
 # """Multiple Linear Regression"""
-
-
 import numpy as np      
-
 
 class MLR:
     # """Multiple Linear Regression"""

@@ -5,7 +5,6 @@ import csv
 import math
 import sys
 
-
 #------------------------------------------------------------------------------
 def getTwoDecPoint(x):
     return float("%.2f"%x)
@@ -34,7 +33,6 @@ def getAllOfTheData():
 #------------------------------------------------------------------------------
 
 def rescaleTheData(TrainX, ValidateX, TestX):
-
     # 1 degree of freedom means (ddof) N-1 unbiased estimation
     TrainXVar = TrainX.var(axis = 0, ddof=1)
     TrainXMean = TrainX.mean(axis = 0)
