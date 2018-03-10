@@ -8,7 +8,6 @@ import sys
 #------------------------------------------------------------------------------
 def getTwoDecPoint(x):
     return float("%.2f"%x)
-
 #------------------------------------------------------------------------------
 def placeDataIntoArray(fileName):
     with open(fileName, mode='r') as csvfile:
@@ -19,7 +18,6 @@ def placeDataIntoArray(fileName):
         return dataArray.flatten(order='C')
     else:
         return dataArray
-        
 #------------------------------------------------------------------------------
 def getAllOfTheData():
     TrainX = placeDataIntoArray('Train-Data.csv')
@@ -29,10 +27,9 @@ def getAllOfTheData():
     TestX = placeDataIntoArray('Test-Data.csv')
     TestY = placeDataIntoArray('Test-pIC50.csv')
     return TrainX, TrainY, ValidateX, ValidateY, TestX, TestY
-
 #------------------------------------------------------------------------------
-
 def rescaleTheData(TrainX, ValidateX, TestX):
+
     # 1 degree of freedom means (ddof) N-1 unbiased estimation
     TrainXVar = TrainX.var(axis = 0, ddof=1)
     TrainXMean = TrainX.mean(axis = 0)
@@ -45,5 +42,4 @@ def rescaleTheData(TrainX, ValidateX, TestX):
         TestX[i,:] = (TestX[i,:] - TrainXMean)/sqrt(TrainXVar)
 
     return TrainX, ValidateX, TestX
-
 #------------------------------------------------------------------------------
