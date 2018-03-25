@@ -11,7 +11,7 @@ import mlr
 
 class FitnessResults:
     def __init__(self):
-        self.filedata = FromDataFileMLR()
+        self.filedata = FromDataFileMLR.DataFromFile()
     #------------------------------------------------------------------------------
     def r2(self, y, yHat):
         #Coefficient of determination

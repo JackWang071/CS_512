@@ -45,10 +45,8 @@ class FitnessAnalyzer:
     # of training,R^2 of validation, and R^2 of test is placed in the output file
 
     def createAnOutputFile(self):
-
         file_name = None
         algorithm = None
-
 
         timestamp = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
         if ( (file_name == None) and (algorithm != None)):
@@ -56,15 +54,13 @@ class FitnessAnalyzer:
                             algorithm.model.__class__.__name__, algorithm.gen_max,timestamp)
         elif file_name==None:
             file_name = "{}.csv".format(timestamp)
-        fileOut = open(file_name, 'wb')
+        fileOut = open(file_name, 'w')
         fileW = csv.writer(fileOut)
 
         fileW.writerow(['Descriptor ID', 'Fitness', 'Model','R2', 'Q2', \
                 'R2Pred_Validation', 'R2Pred_Test'])
 
         return fileW
-
-
     #-------------------------------------------------------------------------------------------
     def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, fitness):
 
@@ -73,41 +69,56 @@ class FitnessAnalyzer:
     #   order of the fitness. The lower is the fitness, the better it is.
     #   So, Move two rows with of the OldPopulation with the lowest fitness
     #   to row 1 and row 2 of the new population.
-    #
-    #   Name the first row to be Dad and the second row to be mom. Create a
-    #   one point or n point cross over to create at least couple of children.
-    #   children should be moved to the third, fourth, fifth, etc rows of the
-    #   new population.
-    #   The rest of the rows should be filled randomly the same way you did when
-    #   you created the initial population.
 
         NewPopulation = ndarray((numOfPop, numOfFea))
+        temp = ndarray(numOfFea)
+        F = 0.5
+        CV = 0.7 #crossover value
 
         # Sort OldPopulation from best fitness at position 0 to worst at position 1
         for r in range(0, numOfPop):
             BestFitInd = r
-            for r2 in range(r+1, numOfPop):
+            for r2 in range(r, numOfPop):
                 if (fitness[r] < fitness[BestFitInd]):
                     BestFitInd = r
-            temp = OldPopulation[r]
-            OldPopulation[r] = OldPopulation[BestFitInd]
-            OldPopulation[BestFitInd] = temp
+            copyto(temp, OldPopulation[r])
+            copyto(OldPopulation[r], OldPopulation[BestFitInd])
+            copyto(OldPopulation[r], temp)
+        copyto(NewPopulation[0], OldPopulation[0])
 
-
+        for row in range(1, numOfPop):
+            t = row + 1
+            r = row + 2
+            s = row + 3
+            # Ensuring that r and s do not go out of bounds
+            if t >= numOfPop:
+                t -= (numOfPop - 1)
+            if r >= numOfPop:
+                r -= (numOfPop - 1)
+            if s >= numOfPop:
+                s -= (numOfPop - 1)
+            # Nested for loop calculates the value of each element in NewPopulation
+            V = ndarray(numOfFea)
+            for col in range(0, numOfFea):
+                V[col] = OldPopulation[t][col] + (F * (OldPopulation[r][col] - OldPopulation[s][col]))
+                if random.rand(0,1) > CV:
+                    V[col] = OldPopulation[row][col]
+            copyto(NewPopulation[row], V)
 
         return NewPopulation
 
     #-------------------------------------------------------------------------------------------
     def PerformOneMillionIteration(self, numOfPop, numOfFea, population, fitness, model, fileW,
                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY):
-    #   NumOfGenerations = 1
-    #   OldPopulation = population
-    #   while (NumOfGenerations < 1,000,000)
-    #       population = createANewPopulation(numOdPop, numOfFea, OldPopulation, fitness)
-    #       fittingStatus, fitness = FromFinessFileMLR.validate_model(model,fileW, population, \
-    #                                TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
-    #      NumOfGenerations = NumOfGenerations + 1
-         return
+        NumOfGenerations = 1
+        OldPopulation = population
+        while (NumOfGenerations < 1,000,000):
+            population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation, fitness)
+            fittingStatus, fitness = self.fitnessdata.validate_model(model,fileW, population, \
+                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
+            NumOfGenerations = NumOfGenerations + 1
+            print(NumOfGenerations)
+        return
 
 #--------------------------------------------------------------------------------------------
 def main():

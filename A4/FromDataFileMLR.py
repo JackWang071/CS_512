@@ -11,7 +11,7 @@ class DataFromFile:
         return float("%.2f"%x)
     #------------------------------------------------------------------------------
     def placeDataIntoArray(self, fileName):
-        with open(fileName, mode='rb') as csvfile:
+        with open(fileName, mode='r') as csvfile:
             datareader = csv.reader(csvfile, delimiter=',', quotechar=' ')
             dataArray = array([row for row in datareader], dtype=float64, order='C')
 
