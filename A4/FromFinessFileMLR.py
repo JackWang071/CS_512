@@ -189,12 +189,41 @@ class FitnessResults:
             for i in range(len(yHatTest[idx])):
                 yHatTest[idx][i] = self.filedata.getTwoDecPoint(yHatTest[idx][i])
 
+        trackDesc, trackFitness, trackR2, trackQ2, trackR2PredValidation, trackR2PredTest = \
+            self.sortModel(trackDesc, trackFitness, trackR2, trackQ2, trackR2PredValidation, trackR2PredTest)
+
         self.write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
                     trackQ2,trackR2PredValidation, trackR2PredTest)
 
         return itFits, fitness
     #------------------------------------------------------------------------------
+    def sortModel(self, trackDesc, trackFitness, trackR2, trackQ2,
+                      trackR2PredValidation, trackR2PredTest):
 
+        desc = list(trackDesc.values())
+        fitness = list(trackFitness.values())
+        r2 = list(trackR2.values())
+        q2 = list(trackQ2.values())
+        r2valid = list(trackR2PredValidation.values())
+        r2test = list(trackR2PredTest.values())
+
+        for i in range(len(fitness)):
+            for j in range(i, len(fitness)):
+                if fitness[i] > fitness[j]:
+                    fitness[j], fitness[i] = fitness[i], fitness[j]
+                    desc[j], desc[i] = desc[i], desc[j]
+                    r2[j], r2[i] = r2[i], r2[j]
+                    q2[j], q2[i] = q2[i], q2[j]
+                    r2valid[j], r2valid[i] = r2valid[i], r2valid[j]
+                    r2test[j], r2test[i] = r2test[i], r2test[j]
+
+        return dict(zip(list(trackDesc.keys()), desc)), \
+               dict(zip(list(trackFitness.keys()), fitness)), \
+               dict(zip(list(trackR2.keys()), r2)), \
+               dict(zip(list(trackQ2.keys()), q2)), \
+               dict(zip(list(trackR2PredValidation.keys()), r2valid)), \
+               dict(zip(list(trackR2PredTest.keys()), r2test))
+    #---------------------------------------------------------------------------
     def write(self, model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
                     trackQ2,trackR2PredValidation, trackR2PredTest):
 
