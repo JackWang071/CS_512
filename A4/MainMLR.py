@@ -2,8 +2,6 @@ import time                 #provides timing for benchmarks
 from numpy  import *        #provides complex math and array functions
 from sklearn import svm     #provides Support Vector Regression
 import csv
-import math
-import sys
 
 #Local files created by me
 import mlr
@@ -27,9 +25,7 @@ class FitnessAnalyzer:
                  V[j] = 0
            sum = V.sum()
         return V
-
     #------------------------------------------------------------------------------
-
     def Create_A_Population(self, numOfPop, numOfFea):
         population = random.random((numOfPop,numOfFea))
         for i in range(numOfPop):
@@ -37,13 +33,11 @@ class FitnessAnalyzer:
             for j in range(numOfFea):
                 population[i][j] = V[j]
         return population
-
     #------------------------------------------------------------------------------
     # The following creates an output file. Every time a model is created the
     # descriptors of the model, the ame of the model (ex: "MLR" for multiple
     # linear regression of "SVM" support vector machine) the R^2 of training, Q^2
     # of training,R^2 of validation, and R^2 of test is placed in the output file
-
     def createAnOutputFile(self):
         file_name = None
         algorithm = None
@@ -63,17 +57,18 @@ class FitnessAnalyzer:
         return fileW
     #-------------------------------------------------------------------------------------------
     def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, fitness):
-
     #   NewPopulation = create a 2D array of (numOfPop by num of features)
     #   sort the OldPopulation and their fitness value based on the asending
     #   order of the fitness. The lower is the fitness, the better it is.
     #   So, Move two rows with of the OldPopulation with the lowest fitness
     #   to row 1 and row 2 of the new population.
-
         NewPopulation = ndarray((numOfPop, numOfFea))
         temp = ndarray(numOfFea)
         F = 0.5
         CV = 0.7 #crossover value
+        t = 0
+        r = 0
+        s = 0
 
         # Sort OldPopulation from best fitness at position 0 to worst at position 1
         for r in range(0, numOfPop):
@@ -87,16 +82,19 @@ class FitnessAnalyzer:
         copyto(NewPopulation[0], OldPopulation[0])
 
         for row in range(1, numOfPop):
-            t = row + 1
-            r = row + 2
-            s = row + 3
-            # Ensuring that r and s do not go out of bounds
-            if t >= numOfPop:
-                t -= (numOfPop - 1)
-            if r >= numOfPop:
-                r -= (numOfPop - 1)
-            if s >= numOfPop:
-                s -= (numOfPop - 1)
+            while True:
+                t = random.randint(1, numOfPop)
+                if t != row:
+                    break
+            while True:
+                r = random.randint(1, numOfPop)
+                if r != row & r != t:
+                    break
+            while True:
+                s = random.randint(1, numOfPop)
+                if s != row & s != r & s != t:
+                    break
+
             # Nested for loop calculates the value of each element in NewPopulation
             V = ndarray(numOfFea)
             for col in range(0, numOfFea):
@@ -106,13 +104,12 @@ class FitnessAnalyzer:
             copyto(NewPopulation[row], V)
 
         return NewPopulation
-
     #-------------------------------------------------------------------------------------------
     def PerformOneMillionIteration(self, numOfPop, numOfFea, population, fitness, model, fileW,
                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY):
         NumOfGenerations = 1
         OldPopulation = population
-        while (NumOfGenerations < 1,000,000):
+        while (NumOfGenerations < 1000):
             population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation, fitness)
             fittingStatus, fitness = self.fitnessdata.validate_model(model,fileW, population, \
                                     TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
@@ -135,7 +132,6 @@ def main():
     #Number of descriptor should be 385 and number of population should be 50 or more
     numOfPop = 50 
     numOfFea = 385
-
 
     # we continue exhancing the model; however if after 1000 iteration no
     # enhancement is done, we can quit
@@ -161,9 +157,7 @@ def main():
     analyzer.PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, fileW, \
                                TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
 #main routine ends in here
-
 #------------------------------------------------------------------------------
-
 main()
 #------------------------------------------------------------------------------
 
