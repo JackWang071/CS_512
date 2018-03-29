@@ -82,6 +82,7 @@ class FitnessAnalyzer:
         copyto(NewPopulation[0], OldPopulation[0])
 
         for row in range(1, numOfPop):
+            # Ensuring that values of t, r, and s are all random and distinct
             while True:
                 t = random.randint(1, numOfPop)
                 if t != row:
