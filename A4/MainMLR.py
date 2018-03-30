@@ -66,15 +66,15 @@ class FitnessAnalyzer:
         temp = ndarray(numOfFea)
         F = 0.5
         CV = 0.7 #crossover value
-        t = 0
-        r = 0
-        s = 0
+        RowT = 0
+        RowR = 0
+        RowS = 0
 
         # Sort OldPopulation from best fitness at position 0 to worst at position 1
         for r in range(0, numOfPop):
             BestFitInd = r
             for r2 in range(r, numOfPop):
-                if (fitness[r] < fitness[BestFitInd]):
+                if (fitness[r] < fitness[BestFitInd]) & (fitness[r] > 0):
                     BestFitInd = r
             copyto(temp, OldPopulation[r])
             copyto(OldPopulation[r], OldPopulation[BestFitInd])
@@ -82,24 +82,24 @@ class FitnessAnalyzer:
         copyto(NewPopulation[0], OldPopulation[0])
 
         for row in range(1, numOfPop):
-            # Ensuring that values of t, r, and s are all random and distinct
+            # Ensuring that values of RowT, RowR, and RowS are all random and distinct
             while True:
-                t = random.randint(1, numOfPop)
-                if t != row:
+                RowT = random.randint(1, numOfPop)
+                if RowT != row:
                     break
             while True:
-                r = random.randint(1, numOfPop)
-                if r != row & r != t:
+                RowR = random.randint(1, numOfPop)
+                if RowR != row & RowR != RowT:
                     break
             while True:
-                s = random.randint(1, numOfPop)
-                if s != row & s != r & s != t:
+                RowS = random.randint(1, numOfPop)
+                if RowS != row & RowS != RowR & RowS != RowT:
                     break
 
             # Nested for loop calculates the value of each element in NewPopulation
             V = ndarray(numOfFea)
             for col in range(0, numOfFea):
-                V[col] = OldPopulation[t][col] + (F * (OldPopulation[r][col] - OldPopulation[s][col]))
+                V[col] = OldPopulation[RowT][col] + (F * (OldPopulation[RowR][col] - OldPopulation[RowS][col]))
                 if random.rand(0,1) > CV:
                     V[col] = OldPopulation[row][col]
             copyto(NewPopulation[row], V)
