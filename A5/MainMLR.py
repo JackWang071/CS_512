@@ -25,26 +25,15 @@ class FitnessAnalyzer:
             for j in range(numOfFea):
                 self.VelocityM[i][j] = random.random()
     #------------------------------------------------------------------------------
-    def getAValidrow(self, numOfFea, eps=0.015):
-        sum = 0
-        while (sum < 3):
-           V = zeros(numOfFea)
-           for j in range(numOfFea):
-              r = random.uniform(0,1)
-              if (r < eps):
-                 V[j] = 1
-              else:
-                 V[j] = 0
-           sum = V.sum()
-        return V
-    #------------------------------------------------------------------------------
-    def Create_A_Population(self, numOfPop, numOfFea):
-        population = random.random((numOfPop,numOfFea))
-        for i in range(numOfPop):
-            V = self.getAValidrow(numOfFea)
-            for j in range(numOfFea):
-                population[i][j] = V[j]
-        return population
+    def InitializePopulation(self, numOfPop, numOfFea, lmbd = 0.01):
+        newpop = ndarray((numOfPop, numOfFea))
+        for p in range(numOfPop):
+            for f in range(numOfFea):
+                if self.VelocityM[p][f] <= lmbd:
+                    newpop[p][f] = 1
+                else:
+                    newpop[p][f] = 0
+        return newpop
     #------------------------------------------------------------------------------
     # The following creates an output file. Every time a model is created the
     # descriptors of the model, the ame of the model (ex: "MLR" for multiple
@@ -68,19 +57,19 @@ class FitnessAnalyzer:
 
         return fileW
     #-------------------------------------------------------------------------------------------
-    def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, fitness):
+    def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, beta=0.004):
         NewPopulation = ndarray((numOfPop, numOfFea))
-
         self.alpha -= (0.17 / self.NumIterations)
-        p = 0.5 * (1 + self.alpha)
+        a = 0.5 * (1 + self.alpha)
+        b = 1 - beta
         for i in range(numOfPop):
             for j in range(numOfFea):
-                if self.VelocityM[i][j] <= self.alpha:
-                    NewPopulation[i][j] = OldPopulation[i][j]
-                elif (self.VelocityM[i][j] > self.alpha) & (self.VelocityM[i][j] <= p):
+                if (self.alpha < self.VelocityM[i][j]) & (self.VelocityM[i][j] <= a):
                     NewPopulation[i][j] = self.LocalBestM[i][j]
-                elif (self.VelocityM[i][j] > p) & (self.VelocityM[i][j] <= 1):
+                elif (a < self.VelocityM[i][j]) & (self.VelocityM[i][j] <= b):
                     NewPopulation[i][j] = self.GlobalBestRow[j]
+                elif (b < self.VelocityM[i][j]) & (self.VelocityM[i][j] <= 1):
+                    NewPopulation[i][j] = 1 - OldPopulation[i][j]
                 else:
                     NewPopulation[i][j] = OldPopulation[i][j]
         return NewPopulation
@@ -100,22 +89,37 @@ class FitnessAnalyzer:
         for i in range(numOfPop):
                 if self.LocalBestM_Fit[i] > NewPopFitness[i]:
                     copyto(self.LocalBestM[i], NewPopulation[i])
+                    self.LocalBestM_Fit[i] = NewPopFitness[i]
     #-------------------------------------------------------------------------------------------
-    def UpdateVelocityMatrix(self, NewPop, c1=2, c2=2, inertiaWeight=0.9):
+    def UpdateVelocityMatrix(self, NewPop, F=0.7, CR=0.7):
         numOfPop = self.VelocityM.shape[0]
         numOfFea = self.VelocityM.shape[1]
         for i in range(numOfPop):
+            # Ensuring that values of r1, r2, and r3 are all random and distinct
+            while True:
+                r1 = random.randint(0, numOfPop)
+                if r1 != i:
+                    break
+            while True:
+                r2 = random.randint(0, numOfPop)
+                if r2 != i & r2 != r1:
+                    break
+            while True:
+                r3 = random.randint(0, numOfPop)
+                if r3 != i & r3 != r2 & r3 != r1:
+                    break
             for j in range(numOfFea):
-                term1 = c1 * random.random() * (self.LocalBestM[i][j] - NewPop[i][j])
-                term2 = c2 * random.random() * (self.GlobalBestRow[j] - NewPop[i][j])
-                self.VelocityM[i][j]=term1+term2+(inertiaWeight*self.VelocityM[i][j])
+                if random.random() < CR:
+                    self.VelocityM[i][j] = NewPop[r1][j] + (F * (NewPop[r2][j] - NewPop[r3][j]))
+                else:
+                    self.VelocityM[i][j] = self.VelocityM[i][j]
     #-------------------------------------------------------------------------------------------
     def PerformOneMillionIteration(self, numOfPop, numOfFea, population, fitness, model, fileW,
                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY):
         NumOfGenerations = 1
         OldPopulation = population
         while (NumOfGenerations < self.NumIterations):
-            population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation, fitness)
+            population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation)
             fittingStatus, fitness = self.fitnessdata.validate_model(model,fileW, population, \
                                     TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
 
@@ -162,16 +166,16 @@ def main():
     TrainX, ValidateX, TestX = filedata.rescaleTheData(TrainX, ValidateX, TestX)
 
     fittingStatus = unfit
-    population = analyzer.Create_A_Population(numOfPop,numOfFea)
+    analyzer.CreateInitialVelocity(numOfPop, numOfFea)
+    population = analyzer.InitializePopulation(numOfPop,numOfFea)
     fittingStatus, fitness = fitnessdata.validate_model(model,fileW, population, \
         TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
 
-    analyzer.CreateInitialVelocity(numOfPop, numOfFea)
     copyto(analyzer.LocalBestM, population) #initializing LocalBestMatrix as the initial population
     copyto(analyzer.LocalBestM_Fit, fitness)
     analyzer.FindGlobalBestRow()
 
-    analyzer.PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, fileW, \
+    analyzer.PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, fileW,
                                TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
 #main routine ends in here
 #------------------------------------------------------------------------------
