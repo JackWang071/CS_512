@@ -89,6 +89,7 @@ class FitnessAnalyzer:
         for i in range(numOfPop):
                 if self.LocalBestM_Fit[i] > NewPopFitness[i]:
                     copyto(self.LocalBestM[i], NewPopulation[i])
+                    self.LocalBestM_Fit[i] = NewPopFitness[i]
     #-------------------------------------------------------------------------------------------
     def UpdateVelocityMatrix(self, NewPop, F=0.7, CR=0.7):
         numOfPop = self.VelocityM.shape[0]
