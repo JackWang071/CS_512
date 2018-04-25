@@ -14,7 +14,7 @@ class DE_BPSO:
         self.filedata = FromDataFileMLR.DataFromFile()
         # Performs data analysis on training, validation, and test data
         self.analyzer = FromFinessFileMLR.FitnessResults()
-        self.NumIterations = 100
+        self.NumIterations = 1000
         self.alpha = 0.5 #starting alpha value
         self.GlobalBestRow = ndarray(numOfFea) #best-fitting population yet found
         self.GlobalBestFitness = 10000 #fitness of GlobalBestRow, initialized very high
@@ -64,10 +64,12 @@ class DE_BPSO:
     #-------------------------------------------------------------------------------------------
     def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, beta=0.004):
         NewPopulation = ndarray((numOfPop, numOfFea))
+        # When alpha reaches 0.33, the data mining should be ended
         self.alpha -= (0.17 / self.NumIterations)
         a = 0.5 * (1 + self.alpha)
         b = 1 - beta
         # Each element of NewPopulation will be determined based on VelocityMatrix values
+        # compared to a and b
         for i in range(numOfPop):
             for j in range(numOfFea):
                 if (self.alpha < self.VelocityM[i][j]) & (self.VelocityM[i][j] <= a):
@@ -84,15 +86,13 @@ class DE_BPSO:
         IndexOfBest = 0 # represents index position of best-fitness row in LocalBestMatrix
         numOfPop = self.LocalBestM.shape[0]
         # Find the row with best fitness value in LocalBestMatrix
-        #print(self.GlobalBestFitness)
         for i in range(numOfPop):
             if (self.LocalBestM_Fit[i] < self.GlobalBestFitness) and (self.LocalBestM_Fit[i] > 0):
-         #       print(i, " ")
                 self.GlobalBestFitness = self.LocalBestM_Fit[i]
                 IndexOfBest = i
+                print(IndexOfBest, " ")
         # Update GlobalBestRow to the LocalBestMatrix row with best fitness
         copyto(self.GlobalBestRow, self.LocalBestM[IndexOfBest])
-        #print(self.GlobalBestFitness)
     #-------------------------------------------------------------------------------------------
     def UpdateLocalMatrix(self, NewPopulation, NewPopFitness):
         numOfPop = self.LocalBestM.shape[0]
