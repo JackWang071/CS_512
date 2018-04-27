@@ -8,19 +8,19 @@ import mlr
 import FromDataFileMLR
 import FromFinessFileMLR
 
-class BPSO:
+class DE_BPSO:
     def __init__(self, numOfPop, numOfFea):
         # Acquires and formats data from Train, Validation, Test .csv files
         self.filedata = FromDataFileMLR.DataFromFile()
         # Performs data analysis on training, validation, and test data
         self.analyzer = FromFinessFileMLR.FitnessResults()
         self.NumIterations = 1000
-        self.alpha = 0.5  # starting alpha value
-        self.GlobalBestRow = ndarray(numOfFea)  # best-fitting population yet found
-        self.GlobalBestFitness = 10000  # fitness of GlobalBestRow, initialized very high
-        self.VelocityM = ndarray((numOfPop, numOfFea))  # Velocity matrix
-        self.LocalBestM = ndarray((numOfPop, numOfFea))  # local best matrix
-        self.LocalBestM_Fit = ndarray(numOfPop)  # local best matrix fitnesses
+        self.alpha = 0.5 #starting alpha value
+        self.GlobalBestRow = ndarray(numOfFea) #best-fitting population yet found
+        self.GlobalBestFitness = 10000 #fitness of GlobalBestRow, initialized very high
+        self.VelocityM = ndarray((numOfPop, numOfFea)) # Velocity matrix
+        self.LocalBestM = ndarray((numOfPop, numOfFea)) # local best matrix
+        self.LocalBestM_Fit = ndarray(numOfPop) # local best matrix fitnesses
     #------------------------------------------------------------------------------
     def CreateInitialVelocity(self, numOfPop, numOfFea):
         # Each element in initial VelocityMatrix is randomly determined
@@ -28,28 +28,17 @@ class BPSO:
             for j in range(numOfFea):
                 self.VelocityM[i][j] = random.random()
     #------------------------------------------------------------------------------
-    def getAValidrow(self, numOfFea, eps=0.015):
-        # Returns a row with at least three features
-        sum = 0
-        while (sum < 3):
-           V = zeros(numOfFea)
-           for j in range(numOfFea):
-              r = random.uniform(0,1)
-              if (r < eps):
-                 V[j] = 1
-              else:
-                 V[j] = 0
-           sum = V.sum()
-        return V
-    #------------------------------------------------------------------------------
-    def Create_A_Population(self, numOfPop, numOfFea):
-        # Initializes the first population using getAValidRow
-        population = random.random((numOfPop,numOfFea))
-        for i in range(numOfPop):
-            V = self.getAValidrow(numOfFea)
-            for j in range(numOfFea):
-                population[i][j] = V[j]
-        return population
+    def InitializePopulation(self, numOfPop, numOfFea, lmbd = 0.01):
+        newpop = ndarray((numOfPop, numOfFea))
+        # Each element in initial Population is based on VelocityMatrix values
+        # in the same index position.
+        for p in range(numOfPop):
+            for f in range(numOfFea):
+                if self.VelocityM[p][f] <= lmbd:
+                    newpop[p][f] = 1
+                else:
+                    newpop[p][f] = 0
+        return newpop
     #------------------------------------------------------------------------------
     # The following creates an output file. Every time a model is created the
     # descriptors of the model, the ame of the model (ex: "MLR" for multiple
@@ -58,7 +47,6 @@ class BPSO:
     def createAnOutputFile(self):
         file_name = None
         algorithm = None
-
         timestamp = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
         if ( (file_name == None) and (algorithm != None)):
             file_name = "{}_{}_gen{}_{}.csv".format(algorithm.__class__.__name__,
@@ -67,27 +55,26 @@ class BPSO:
             file_name = "{}.csv".format(timestamp)
         fileOut = open(file_name, 'w')
         fileW = csv.writer(fileOut)
-
         fileW.writerow(['Descriptor ID', 'Fitness', 'Model','R2', 'Q2',
                 'R2Pred_Validation', 'R2Pred_Test'])
-
         return fileW
     #-------------------------------------------------------------------------------------------
-    def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, fitness):
-        NewPopulation = ndarray((numOfPop, numOfFea))
+    def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, beta=0.004):
+        NewPopulation = OldPopulation.copy()
         # When alpha reaches 0.33, the data mining should be ended
         self.alpha -= (0.17 / self.NumIterations)
-        p = 0.5 * (1 + self.alpha)
+        a = 0.5 * (1 + self.alpha)
+        b = 1 - beta
         # Each element of NewPopulation will be determined based on VelocityMatrix values
-        # compared to p
+        # compared to a and b
         for i in range(numOfPop):
             for j in range(numOfFea):
-                if self.VelocityM[i][j] <= self.alpha:
-                    NewPopulation[i][j] = OldPopulation[i][j]
-                elif (self.VelocityM[i][j] > self.alpha) & (self.VelocityM[i][j] <= p):
+                if (self.alpha < self.VelocityM[i][j]) & (self.VelocityM[i][j] <= a):
                     NewPopulation[i][j] = self.LocalBestM[i][j]
-                elif (self.VelocityM[i][j] > p) & (self.VelocityM[i][j] <= 1):
+                elif (a < self.VelocityM[i][j]) & (self.VelocityM[i][j] <= b):
                     NewPopulation[i][j] = self.GlobalBestRow[j]
+                elif (b < self.VelocityM[i][j]) & (self.VelocityM[i][j] <= 1):
+                    NewPopulation[i][j] = 1 - OldPopulation[i][j]
                 else:
                     NewPopulation[i][j] = OldPopulation[i][j]
         return NewPopulation
@@ -110,35 +97,59 @@ class BPSO:
                 # Update fitness for this LocalBestMatrix row
                 self.LocalBestM_Fit[i] = NewPopFitness[i]
     #-------------------------------------------------------------------------------------------
-    def UpdateVelocityMatrix(self, NewPop, c1=2, c2=2, inertiaWeight=0.9):
+    def UpdateVelocityMatrix(self, NewPop, F=0.7, CR=0.7):
         numOfPop = self.VelocityM.shape[0]
         numOfFea = self.VelocityM.shape[1]
-        # Go through element in VelocityMatrix
+        # Go through each row in VelocityMatrix
         for i in range(numOfPop):
+            # Ensuring that values of r1, r2, and r3 are all random and distinct
+            # Each value will indicate a row from NewPop
+            # Each row will be used to generate updated values for VelocityMatrix
+            while True:
+                r1 = random.randint(0, numOfPop)
+                if r1 != i:
+                    break
+            while True:
+                r2 = random.randint(0, numOfPop)
+                if r2 != i & r2 != r1:
+                    break
+            while True:
+                r3 = random.randint(0, numOfPop)
+                if r3 != i & r3 != r2 & r3 != r1:
+                    break
+            #For every element in the ith row of Velocity Matrix:
             for j in range(numOfFea):
-                # Each element will be updated using terms based on the current
-                # LocalBestMatrix and GlobalBestRow
-                term1 = c1 * random.random() * (self.LocalBestM[i][j] - NewPop[i][j])
-                term2 = c2 * random.random() * (self.GlobalBestRow[j] - NewPop[i][j])
-                self.VelocityM[i][j]=term1+term2+(inertiaWeight*self.VelocityM[i][j])
+                #If random() returns a value under CR, update this element using this equation
+                if random.random() < CR:
+                    self.VelocityM[i][j] = NewPop[r1][j] + (F * (NewPop[r2][j] - NewPop[r3][j]))
+                #Otherwise just keep the old value
+                else:
+                    self.VelocityM[i][j] = self.VelocityM[i][j]
     #-------------------------------------------------------------------------------------------
     def PerformOneMillionIteration(self, numOfPop, numOfFea, population, fitness, model, fileW,
                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY):
         NumOfGenerations = 1
-        while NumOfGenerations < self.NumIterations:
+        #OldPopulation = population
+        while (NumOfGenerations < self.NumIterations):
+            print(NumOfGenerations)
             OldPopulation = population.copy()
-            population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation, fitness)
-            fittingStatus, fitness = self.analyzer.validate_model(model,fileW, population,
-                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY).copy()
+
+            print('oldpop copied', end = ' | ')
+
+            population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation)
+
+            print('newpop created', end=' | ')
+
+            fittingStatus, fitness = self.analyzer.validate_model(model,fileW,
+                        population, TrainX, TrainY, ValidateX, ValidateY, TestX, TestY).copy()
 
             self.UpdateLocalMatrix(population, fitness)
             self.FindGlobalBestRow()
             self.UpdateVelocityMatrix(population)
 
             NumOfGenerations = NumOfGenerations + 1
-            print(NumOfGenerations)
         return
-#end of BPSO class
+#end of DE_BPSO class
 
 #--------------------------------------------------------------------------------------------
 #Main program
@@ -150,7 +161,8 @@ def main():
     # create an object of Multiple Linear Regression model.
     # The class is located in mlr file
     model = mlr.MLR()
-    dataminer = BPSO(numOfPop, numOfFea)
+    # Creates new populations and updates VelocityMatrix, LocalBestMatrix, and GlobalBestRow
+    dataminer = DE_BPSO(numOfPop, numOfFea)
 
     # create an output file. Name the object to be FileW 
     fileW = dataminer.createAnOutputFile()
@@ -172,17 +184,19 @@ def main():
     TrainX, ValidateX, TestX = dataminer.filedata.rescaleTheData(TrainX, ValidateX, TestX)
 
     fittingStatus = unfit
-    # Initializing and finding the fitness of the first population
-    population = dataminer.Create_A_Population(numOfPop,numOfFea)
+    # Creating initial Velocity Matrix
+    dataminer.CreateInitialVelocity(numOfPop, numOfFea)
+    # Creating initial population based on initial VelocityMatrix
+    population = dataminer.InitializePopulation(numOfPop,numOfFea)
+    # Determining fitness of initial population
     fittingStatus, fitness = dataminer.analyzer.validate_model(model,fileW, population,
         TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
 
-    # Initializing the first VelocityMatrix
-    dataminer.CreateInitialVelocity(numOfPop, numOfFea)
     # initializing LocalBestMatrix as the initial population
     dataminer.LocalBestM = population.copy()
-    # initializing LocalBestMatrix's fitness as the initial population's fitness
+    # initializing LocalBestMatrix's fitness values
     dataminer.LocalBestM_Fit = fitness.copy()
+    # finding the GlobalBestRow of the initial population
     dataminer.FindGlobalBestRow()
 
     dataminer.PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, fileW,
