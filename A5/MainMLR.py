@@ -96,7 +96,7 @@ class BPSO:
         IndexOfBest = argmin(self.LocalBestM_Fit)
         if self.GlobalBestFitness > self.LocalBestM_Fit[IndexOfBest]:
             # Update GlobalBestRow to the LocalBestMatrix row with best fitness
-            copyto(self.GlobalBestRow, self.LocalBestM[IndexOfBest])
+            self.GlobalBestRow = self.LocalBestM[IndexOfBest].copy()
             self.GlobalBestFitness = self.LocalBestM_Fit[IndexOfBest]
     #-------------------------------------------------------------------------------------------
     def UpdateLocalMatrix(self, NewPopulation, NewPopFitness):
@@ -106,7 +106,7 @@ class BPSO:
             # If the ith LocalBestMatrix row has worse fitness than ith NewPopulation row:
             if self.LocalBestM_Fit[i] > NewPopFitness[i]:
                 # Update LocalBestMatrix with NewPopulation row
-                copyto(self.LocalBestM[i], NewPopulation[i])
+                self.LocalBestM[i] = NewPopulation[i].copy()
                 # Update fitness for this LocalBestMatrix row
                 self.LocalBestM_Fit[i] = NewPopFitness[i]
     #-------------------------------------------------------------------------------------------
@@ -125,11 +125,11 @@ class BPSO:
     def PerformOneMillionIteration(self, numOfPop, numOfFea, population, fitness, model, fileW,
                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY):
         NumOfGenerations = 1
-        OldPopulation = population
         while NumOfGenerations < self.NumIterations:
+            OldPopulation = population.copy()
             population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation, fitness)
             fittingStatus, fitness = self.analyzer.validate_model(model,fileW, population,
-                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
+                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY).copy()
 
             self.UpdateLocalMatrix(population, fitness)
             self.FindGlobalBestRow()
@@ -180,9 +180,9 @@ def main():
     # Initializing the first VelocityMatrix
     dataminer.CreateInitialVelocity(numOfPop, numOfFea)
     # initializing LocalBestMatrix as the initial population
-    copyto(dataminer.LocalBestM, population)
+    dataminer.LocalBestM = population.copy()
     # initializing LocalBestMatrix's fitness as the initial population's fitness
-    copyto(dataminer.LocalBestM_Fit, fitness)
+    dataminer.LocalBestM_Fit = fitness.copy()
     dataminer.FindGlobalBestRow()
 
     dataminer.PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, fileW,
