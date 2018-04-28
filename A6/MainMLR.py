@@ -136,12 +136,14 @@ class DE_BPSO:
 
             print('oldpop copied', end = ' | ')
 
-            population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation)
+            population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation).copy()
 
             print('newpop created', end=' | ')
 
             fittingStatus, fitness = self.analyzer.validate_model(model,fileW,
-                        population, TrainX, TrainY, ValidateX, ValidateY, TestX, TestY).copy()
+                        population, TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
+
+            print('fitness calculated')
 
             self.UpdateLocalMatrix(population, fitness)
             self.FindGlobalBestRow()
