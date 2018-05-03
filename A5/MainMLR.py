@@ -2,6 +2,7 @@ import time                 #provides timing for benchmarks
 from numpy  import *        #provides complex math and array functions
 from sklearn import svm     #provides Support Vector Regression
 import csv
+import os
 
 #Local files created by me
 import mlr
@@ -14,13 +15,16 @@ class BPSO:
         self.filedata = FromDataFileMLR.DataFromFile()
         # Performs data analysis on training, validation, and test data
         self.analyzer = FromFinessFileMLR.FitnessResults()
-        self.NumIterations = 1000
+        self.NumIterations = 100
         self.alpha = 0.5  # starting alpha value
         self.GlobalBestRow = ndarray(numOfFea)  # best-fitting population yet found
         self.GlobalBestFitness = 10000  # fitness of GlobalBestRow, initialized very high
         self.VelocityM = ndarray((numOfPop, numOfFea))  # Velocity matrix
         self.LocalBestM = ndarray((numOfPop, numOfFea))  # local best matrix
         self.LocalBestM_Fit = ndarray(numOfPop)  # local best matrix fitnesses
+    #------------------------------------------------------------------------------
+    def getRand(self):
+        return int.from_bytes(os.urandom(8), byteorder="big") / ((1 << 64) - 1)
     #------------------------------------------------------------------------------
     def CreateInitialVelocity(self, numOfPop, numOfFea):
         # Each element in initial VelocityMatrix is randomly determined
@@ -74,22 +78,27 @@ class BPSO:
         return fileW
     #-------------------------------------------------------------------------------------------
     def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, fitness):
-        NewPopulation = ndarray((numOfPop, numOfFea))
+        NewPopulation = OldPopulation.copy()
         # When alpha reaches 0.33, the data mining should be ended
         self.alpha -= (0.17 / self.NumIterations)
         p = 0.5 * (1 + self.alpha)
         # Each element of NewPopulation will be determined based on VelocityMatrix values
         # compared to p
         for i in range(numOfPop):
+            print(i, end=': ')
             for j in range(numOfFea):
                 if self.VelocityM[i][j] <= self.alpha:
                     NewPopulation[i][j] = OldPopulation[i][j]
                 elif (self.VelocityM[i][j] > self.alpha) & (self.VelocityM[i][j] <= p):
                     NewPopulation[i][j] = self.LocalBestM[i][j]
+                    print(j, end=' ')
                 elif (self.VelocityM[i][j] > p) & (self.VelocityM[i][j] <= 1):
                     NewPopulation[i][j] = self.GlobalBestRow[j]
+                    print(j, end=' ')
                 else:
                     NewPopulation[i][j] = OldPopulation[i][j]
+
+            print(' ')
         return NewPopulation
     #-------------------------------------------------------------------------------------------
     def FindGlobalBestRow(self):
@@ -129,7 +138,7 @@ class BPSO:
             OldPopulation = population.copy()
             population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation, fitness)
             fittingStatus, fitness = self.analyzer.validate_model(model,fileW, population,
-                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY).copy()
+                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
 
             self.UpdateLocalMatrix(population, fitness)
             self.FindGlobalBestRow()

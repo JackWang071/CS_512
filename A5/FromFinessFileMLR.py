@@ -1,9 +1,6 @@
 import time                  # provides timing for benchmarks
 from numpy   import *        # provides complex math and array functions
 #from sklearn import svm     # provides Support Vector Regression
-import csv
-import math
-import sys
 import hashlib
 
 import FromDataFileMLR
@@ -186,7 +183,7 @@ class FitnessResults:
         self.write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
                     trackQ2,trackR2PredValidation, trackR2PredTest)
 
-        return itFits, fitness
+        return itFits, fitness.copy()
     #---------------------------------------------------------------------------
     def write(self, model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
                     trackQ2,trackR2PredValidation, trackR2PredTest):
