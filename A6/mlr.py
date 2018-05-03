@@ -1,23 +1,19 @@
 """Multiple Linear Regression"""
-
-
-import numpy as np      
-
+import numpy as np
 
 class MLR:
     """Multiple Linear Regression"""
-    
     def __init__(self):
         """Initialization"""
         self.coef = None
-    
+
     def fit(self, x_set, y_set):
         """Fit to training X and Y arrays"""
         # Add a column of 1's for the intercept
         x_set = np.append(np.ones((x_set.shape[0], 1)), x_set, axis=1)
         self.coef = np.linalg.lstsq(x_set, y_set)[0]
         return 'MLR'
-    
+
     def predict(self, x_set):
         """Predict a Y from an X, object must already be fitted."""
         # matrix multiplication of X appended with a column of 1's (for
