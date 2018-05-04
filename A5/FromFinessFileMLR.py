@@ -180,7 +180,7 @@ class FitnessResults:
             for i in range(len(yHatTest[idx])):
                 yHatTest[idx][i] = self.filedata.getTwoDecPoint(yHatTest[idx][i])
 
-        self.write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
+        self.write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,
                     trackQ2,trackR2PredValidation, trackR2PredTest)
 
         return itFits, fitness.copy()

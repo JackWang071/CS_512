@@ -15,7 +15,7 @@ class BPSO:
         self.filedata = FromDataFileMLR.DataFromFile()
         # Performs data analysis on training, validation, and test data
         self.analyzer = FromFinessFileMLR.FitnessResults()
-        self.NumIterations = 100
+        self.NumIterations = 1000
         self.alpha = 0.5  # starting alpha value
         self.GlobalBestRow = ndarray(numOfFea)  # best-fitting population yet found
         self.GlobalBestFitness = 10000  # fitness of GlobalBestRow, initialized very high
@@ -77,29 +77,30 @@ class BPSO:
 
         return fileW
     #-------------------------------------------------------------------------------------------
-    def createANewPopulation(self, numOfPop, numOfFea, OldPopulation, fitness):
+    def createANewPopulation(self, numOfPop, numOfFea, OldPopulation):
         NewPopulation = OldPopulation.copy()
         # When alpha reaches 0.33, the data mining should be ended
         self.alpha -= (0.17 / self.NumIterations)
         p = 0.5 * (1 + self.alpha)
+
+        changecount = 0
         # Each element of NewPopulation will be determined based on VelocityMatrix values
         # compared to p
         for i in range(numOfPop):
-            print(i, end=': ')
             for j in range(numOfFea):
                 if self.VelocityM[i][j] <= self.alpha:
                     NewPopulation[i][j] = OldPopulation[i][j]
                 elif (self.VelocityM[i][j] > self.alpha) & (self.VelocityM[i][j] <= p):
                     NewPopulation[i][j] = self.LocalBestM[i][j]
-                    print(j, end=' ')
                 elif (self.VelocityM[i][j] > p) & (self.VelocityM[i][j] <= 1):
                     NewPopulation[i][j] = self.GlobalBestRow[j]
-                    print(j, end=' ')
                 else:
                     NewPopulation[i][j] = OldPopulation[i][j]
 
-            print(' ')
-        return NewPopulation
+                #Tracking the number of changes between OldPopulation and NewPopulation
+                if NewPopulation[i][j] != OldPopulation[i][j]:
+                    changecount += 1
+        return NewPopulation.copy(), changecount
     #-------------------------------------------------------------------------------------------
     def FindGlobalBestRow(self):
         IndexOfBest = argmin(self.LocalBestM_Fit)
@@ -122,6 +123,8 @@ class BPSO:
     def UpdateVelocityMatrix(self, NewPop, c1=2, c2=2, inertiaWeight=0.9):
         numOfPop = self.VelocityM.shape[0]
         numOfFea = self.VelocityM.shape[1]
+        vcount = 0
+
         # Go through element in VelocityMatrix
         for i in range(numOfPop):
             for j in range(numOfFea):
@@ -130,22 +133,40 @@ class BPSO:
                 term1 = c1 * random.random() * (self.LocalBestM[i][j] - NewPop[i][j])
                 term2 = c2 * random.random() * (self.GlobalBestRow[j] - NewPop[i][j])
                 self.VelocityM[i][j]=term1+term2+(inertiaWeight*self.VelocityM[i][j])
+                vcount += abs(self.VelocityM[i][j])
+        return vcount / (numOfPop * numOfFea) #returning the average velocity
     #-------------------------------------------------------------------------------------------
     def PerformOneMillionIteration(self, numOfPop, numOfFea, population, fitness, model, fileW,
                                    TrainX, TrainY, ValidateX, ValidateY, TestX, TestY):
         NumOfGenerations = 1
+        waittime = 0 # tracks how many passes have occurred since a certain time X
+
         while NumOfGenerations < self.NumIterations:
+            print("Generation", NumOfGenerations)
             OldPopulation = population.copy()
-            population = self.createANewPopulation(numOfPop, numOfFea, OldPopulation, fitness)
+            population, popchanges = self.createANewPopulation(numOfPop, numOfFea, OldPopulation)
             fittingStatus, fitness = self.analyzer.validate_model(model,fileW, population,
                                     TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
 
             self.UpdateLocalMatrix(population, fitness)
             self.FindGlobalBestRow()
-            self.UpdateVelocityMatrix(population)
+            avgV = self.UpdateVelocityMatrix(population)
 
+            # If average velocity falls below a certain threshold, scatter the models
+            #if avgV <
+            # If population models have not changed much in a while, scatter the models
+            if popchanges < 3:
+                waittime = waittime + 1
+                if waittime >= 3:
+                    #self.CreateInitialVelocity(numOfPop, numOfFea)
+                    population = self.Create_A_Population(numOfPop, numOfFea)
+                    waittime = 0
+            elif waittime > 0:
+                waittime = 0
+
+            print(popchanges)
+            print(waittime)
             NumOfGenerations = NumOfGenerations + 1
-            print(NumOfGenerations)
         return
 #end of BPSO class
 
