@@ -133,6 +133,7 @@ def PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, f
                                GlobalBestFit, NumIterations):
     NumOfGenerations = 1
     alpha = 0.5
+    waittime = 0
     while NumOfGenerations < NumIterations:
         OldPopulation = population.copy()
         alpha, popchanges, population = createANewPopulation(numOfPop, numOfFea, OldPopulation, VelocityM,
@@ -148,11 +149,17 @@ def PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, f
         GlobalBestRow, GlobalBestFit = FindGlobalBestRow(LocalMatrix, LocalMatFitness, GlobalBestRow, GlobalBestFit)
         VelocityM, avgV = UpdateVelocityMatrix(population, VelocityM, LocalMatrix, GlobalBestRow)
 
-        # If average velocity falls below a certain threshold, scatter half the models
+        # If average velocity falls below a certain threshold, scatter the models
         # if avgV <
-        # If the population models are not changing, scatter half of the models
-        if popchanges == 0:
-            VelocityM = CreateInitialVelocity(numOfPop, numOfFea)
+        # If population models have not changed much in a while, scatter the models
+        if popchanges < 5:
+            waittime = waittime + 1
+            if waittime >= 8:
+                # self.CreateInitialVelocity(numOfPop, numOfFea)
+                population = Create_A_Population(numOfPop, numOfFea)
+                waittime = 0
+        elif waittime > 0:
+            waittime = 0
 
         NumOfGenerations = NumOfGenerations + 1
         print(NumOfGenerations)
