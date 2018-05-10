@@ -2,19 +2,14 @@ import time                 #provides timing for benchmarks
 from numpy  import *        #provides complex math and array functions
 from sklearn import svm     #provides Support Vector Regression
 import csv
-
 #Local files created by me
 import mlr
 import FromDataFileMLR
 import FromFinessFileMLR
-
 #------------------------------------------------------------------------------
 def CreateInitialVelocity(numOfPop, numOfFea):
-    VelocityM = ndarray((numOfPop, numOfFea))
     # Each element in initial VelocityMatrix is randomly determined
-    for i in range(numOfPop):
-        for j in range(numOfFea):
-            VelocityM[i][j] = random.random()
+    VelocityM = random.random((numOfPop, numOfFea))
     return VelocityM
 #------------------------------------------------------------------------------
 def getAValidrow(numOfFea, eps=0.015):
@@ -71,9 +66,8 @@ def createANewPopulation(numOfPop, numOfFea, OldPopulation, VelocityM, LocalBest
     alpha -= (0.17 / NumIterations)
     a = 0.5 * (1 + alpha)
     b = 1 - beta
-    popchanges = 0
     # Each element of NewPopulation will be determined based on VelocityMatrix values
-    # compared to a and b
+    # compared to a and b, allowing for cross-pollination
     for i in range(numOfPop):
         for j in range(numOfFea):
             if (alpha < VelocityM[i][j]) & (VelocityM[i][j] <= a):
@@ -84,14 +78,10 @@ def createANewPopulation(numOfPop, numOfFea, OldPopulation, VelocityM, LocalBest
                 NewPopulation[i][j] = 1 - OldPopulation[i][j]
             else:
                 NewPopulation[i][j] = OldPopulation[i][j]
-
-            if NewPopulation[i][j] != OldPopulation[i][j]:
-                popchanges += 1
-    print(sum(NewPopulation))
-    return alpha, popchanges, NewPopulation
+    return alpha, NewPopulation
 #-------------------------------------------------------------------------------------------
 def FindGlobalBestRow(GlobalBestRow, GlobalBestFitness, LocalBestM, LocalBestM_Fit):
-    IndexOfBest = argmin(LocalBestM_Fit)
+    IndexOfBest = argmin(LocalBestM_Fit) # find the model with lowest fitness in Local Matrix
     if GlobalBestFitness > LocalBestM_Fit[IndexOfBest]:
         # Update GlobalBestRow to the LocalBestMatrix row with best fitness
         GlobalBestRow = LocalBestM[IndexOfBest].copy()
@@ -101,7 +91,6 @@ def FindGlobalBestRow(GlobalBestRow, GlobalBestFitness, LocalBestM, LocalBestM_F
 def UpdateLocalMatrix(NewPopulation, NewPopFitness, LocalBestM, LocalBestM_Fit):
     numOfPop = LocalBestM.shape[0]
     # Go through each row in LocalBestMatrix
-    changes = 0
     for i in range(numOfPop):
         # If the ith LocalBestMatrix row has worse fitness than ith NewPopulation row:
         if LocalBestM_Fit[i] > NewPopFitness[i]:
@@ -109,33 +98,18 @@ def UpdateLocalMatrix(NewPopulation, NewPopFitness, LocalBestM, LocalBestM_Fit):
             LocalBestM[i] = NewPopulation[i].copy()
             # Update fitness for this LocalBestMatrix row
             LocalBestM_Fit[i] = NewPopFitness[i]
-
-            changes += 1
-
-    print(changes)
     return LocalBestM, LocalBestM_Fit
 #-------------------------------------------------------------------------------------------
-def UpdateVelocityMatrix(VelocityM, NewPop, F=0.7, CR=0.7):
-    numOfPop = VelocityM.shape[0]
-    numOfFea = VelocityM.shape[1]
+def UpdateVelocityMatrix(VelocityM, NewPop, numOfPop, numOfFea, F=0.7, CR=0.7):
     avgV = 0
     # Go through each row in VelocityMatrix
     for i in range(numOfPop):
-        # Ensuring that values of r1, r2, and r3 are all random and distinct
+        # Variables r1, r2, and r3 are random values
         # Each value will indicate a row from NewPop
         # Each row will be used to generate updated values for VelocityMatrix
-        while True:
-            r1 = random.randint(0, numOfPop)
-            if r1 != i:
-                break
-        while True:
-            r2 = random.randint(0, numOfPop)
-            if r2 != i & r2 != r1:
-                break
-        while True:
-            r3 = random.randint(0, numOfPop)
-            if r3 != i & r3 != r2 & r3 != r1:
-                break
+        r1 = random.randint(0, numOfPop)
+        r2 = random.randint(0, numOfPop)
+        r3 = random.randint(0, numOfPop)
         #For every element in the ith row of Velocity Matrix:
         for j in range(numOfFea):
             #If random() returns a value under CR, update this element using this equation
@@ -152,48 +126,49 @@ def PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, f
                                NumIterations, VelocityM, LocalMat, LocalMatFit,
                                GlobalBestRow, GlobalBestFitness):
     NumOfGenerations = 1
+    # Value used in cross-pollination when creating new populations
     alpha = 0.5
+    # Tracks number of generations until velocity scattering is required, if necessary
     waittime = 0
     #OldPopulation = population
     while (NumOfGenerations < NumIterations):
+        print('==========================================================================')
         print("Generation", end=' ')
         print(NumOfGenerations)
-
         OldPopulation = population.copy()
-        alpha, popchanges, population = createANewPopulation(numOfPop, numOfFea,
+        alpha, population = createANewPopulation(numOfPop, numOfFea,
                                         OldPopulation, VelocityM, LocalMat,
                                         GlobalBestRow, NumIterations, alpha)
         fittingStatus, fitness = FromFinessFileMLR.validate_model(model,fileW,
                     population, TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
-
         LocalMat, LocalMatFit = UpdateLocalMatrix(population, fitness,
                                                   LocalMat, LocalMatFit)
         GlobalBestRow, GlobalBestFitness = FindGlobalBestRow(GlobalBestRow,
                                             GlobalBestFitness, LocalMat, LocalMatFit)
-        VelocityM, avgV = UpdateVelocityMatrix(VelocityM, population)
+        VelocityM, avgV = UpdateVelocityMatrix(VelocityM, population, numOfPop, numOfFea)
 
-        print(popchanges)
-        print(waittime)
-
-        print(avgV)
+        # Printing relevant data for each generation
+        print('  Global Best Fitness', end=': ')
+        print(float("%.4f" % GlobalBestFitness))
+        #print('  Wait time', end=': ')
+        #print(waittime)
+        print('  Current average velocity', end=': ')
+        print(float("%.4f" %avgV))
 
         # If population models have not changed much in a while, scatter the models
-        if popchanges < 5:
-            waittime = waittime + 1
-            if waittime >= 4:
-                # self.CreateInitialVelocity(numOfPop, numOfFea)
-                population = InitializePopulation(numOfPop, numOfFea, VelocityM)
-                waittime = 0
-        elif waittime > 0:
-            waittime = 0
-
+        #if avgV < 0.25:
+        #    waittime = waittime + 1
+        #    if waittime >= 8:
+        #        VelocityM = CreateInitialVelocity(numOfPop, numOfFea)
+        #        waittime = 0
+        #elif waittime > 0:
+        #    waittime = 0
         NumOfGenerations = NumOfGenerations + 1
     return
-
 #--------------------------------------------------------------------------------------------
 #Main program
 def main():
-    NumIterations = 1000
+    NumIterations = 10000
 
     # Number of descriptor should be 385 and number of population should be 50 or more
     numOfPop = 50

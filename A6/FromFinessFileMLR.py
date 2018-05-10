@@ -2,10 +2,7 @@ import time                  # provides timing for benchmarks
 from numpy   import *        # provides complex math and array functions
 #from sklearn import svm     # provides Support Vector Regression
 import hashlib
-
 import FromDataFileMLR
-import mlr
-
 #------------------------------------------------------------------------------
 def r2(y, yHat):
     #Coefficient of determination
@@ -29,7 +26,6 @@ def cv_predict(model, set_x, set_y):
         modelName = model.fit(train_x, train_y)
         yhat[idx] = model.predict(set_x[idx])
     return yhat
-
 #------------------------------------------------------------------------------
 #Ahmad Hadaegh: Modified  on: July 16, 2013
 def calc_fitness(xi, Y, Yhat, c=2):
@@ -57,7 +53,6 @@ def InitializeTracks():
     trackQ2 = {}
     trackR2PredValidation = {}
     trackR2PredTest = {}
-
     return  trackDesc, trackFitness, trackModel, trackR2, trackQ2, \
             trackR2PredValidation, trackR2PredTest
 #------------------------------------------------------------------------------
@@ -77,7 +72,6 @@ def OnlySelectTheOnesColumns(popI):
     xi = zeros(numOfFea)
     for j in range(numOfFea):
        xi[j] = popI[j]
-
     xi = xi.nonzero()[0]
     xi = xi.tolist()
     return xi
@@ -180,7 +174,6 @@ def validate_model(model, fileW, population, TrainX, TrainY, ValidateX, Validate
 
     write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
                 trackQ2,trackR2PredValidation, trackR2PredTest)
-
     return itFits, fitness.copy()
 #------------------------------------------------------------------------------
 def write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
@@ -188,6 +181,5 @@ def write(model,fileW, trackDesc, trackFitness, trackModel, trackR2,\
     for key in trackFitness.keys():
         fileW.writerow([trackDesc[key], trackFitness[key], trackModel[key], \
             trackR2[key], trackQ2[key], trackR2PredValidation[key], trackR2PredTest[key]])
-
     #fileOut.close()
 #------------------------------------------------------------------------------
