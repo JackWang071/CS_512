@@ -18,7 +18,7 @@ def getAValidrow(numOfFea, eps=0.015):
     while (sum < 3):
        V = zeros(numOfFea)
        for j in range(numOfFea):
-          r = random.uniform(0,1)
+          r = random.random()
           if (r < eps):
              V[j] = 1
           else:
@@ -141,6 +141,8 @@ def PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, f
                                         GlobalBestRow, NumIterations, alpha)
         fittingStatus, fitness = FromFinessFileMLR.validate_model(model,fileW,
                     population, TrainX, TrainY, ValidateX, ValidateY, TestX, TestY)
+
+        # Update the Local Matrix, the Velocity Matrix, and the Global Best Row
         LocalMat, LocalMatFit = UpdateLocalMatrix(population, fitness,
                                                   LocalMat, LocalMatFit)
         GlobalBestRow, GlobalBestFitness = FindGlobalBestRow(GlobalBestRow,
@@ -150,29 +152,29 @@ def PerformOneMillionIteration(numOfPop, numOfFea, population, fitness, model, f
         # Printing relevant data for each generation
         print('  Global Best Fitness', end=': ')
         print(float("%.4f" % GlobalBestFitness))
-        #print('  Wait time', end=': ')
-        #print(waittime)
+        print('  Wait time', end=': ')
+        print(waittime)
         print('  Current average velocity', end=': ')
         print(float("%.4f" %avgV))
 
         # If population models have not changed much in a while, scatter the models
-        #if avgV < 0.25:
-        #    waittime = waittime + 1
-        #    if waittime >= 8:
-        #        VelocityM = CreateInitialVelocity(numOfPop, numOfFea)
-        #        waittime = 0
-        #elif waittime > 0:
-        #    waittime = 0
+        if avgV < 0.15:
+            waittime = waittime + 1
+            if waittime >= 8:
+                VelocityM = CreateInitialVelocity(numOfPop, numOfFea)
+                waittime = 0
+        elif waittime > 0:
+            waittime = 0
         NumOfGenerations = NumOfGenerations + 1
     return
 #--------------------------------------------------------------------------------------------
 #Main program
 def main():
-    NumIterations = 10000
+    NumIterations = 1000
 
     # Number of descriptor should be 385 and number of population should be 50 or more
     numOfPop = 50
-    numOfFea = 385
+    numOfFea = 857
 
     # create an object of Multiple Linear Regression model.
     # The class is located in mlr file
